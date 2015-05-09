@@ -1,5 +1,5 @@
 {
-    "name": "krystian-krasowski/zend-ext",
+    "name": "phpals/zend-ext",
     "description": "Extensions for Zend Framework 2",
     "type": "library",
     "require": {
