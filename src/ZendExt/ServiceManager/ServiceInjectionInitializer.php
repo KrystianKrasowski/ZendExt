@@ -2,43 +2,36 @@
 
 namespace ZendExt\ServiceManager;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use ReflectionClass;
-use Zend\ServiceManager\InitializerInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use ReflectionMethod;
+use ReflectionProperty;
 
-class ServiceInjectionInitializer implements InitializerInterface
+class ServiceInjectionInitializer extends AbstractInjectionInitializer
 {
-    /**
-     * Initialize
-     *
-     * @param $instance
-     * @param ServiceLocatorInterface $serviceLocator
-     * @return mixed
-     */
-    public function initialize($instance, ServiceLocatorInterface $serviceLocator)
+    const INJECT_ANNOTATION = 'ZendExt\ServiceManager\Annotation\Inject';
+
+    protected function processPropertyInjection(ReflectionProperty $property)
     {
-        if (!is_object($instance)) {
+        $inject = $this->annotationReader->getPropertyAnnotation($property, self::INJECT_ANNOTATION);
+
+        if ($inject === null) {
             return;
         }
 
-        $reflection = new ReflectionClass($instance);
-        $annotations = new AnnotationReader();
+        $service = $this->serviceLocator->get($inject->name);
+        $property->setAccessible(true);
+        $property->setValue($this->instance, $service);
+    }
 
-        if ($annotations->getClassAnnotation($reflection, 'ZendExt\ServiceManager\Annotation\Service') === null) {
+    protected function processMethodInjection(ReflectionMethod $method)
+    {
+        $inject = $this->annotationReader->getMethodAnnotation($method, self::INJECT_ANNOTATION);
+
+        if ($inject === null) {
             return;
         }
 
-        foreach ($reflection->getProperties() as $property) {
-            $inject = $annotations->getPropertyAnnotation($property, 'ZendExt\ServiceManager\Annotation\Inject');
-
-            if ($inject === null) {
-                continue;
-            }
-
-            $service = $serviceLocator->get($inject->name);
-            $property->setAccessible(true);
-            $property->setValue($instance, $service);
-        }
+        $service = $this->serviceLocator->get($inject->name);
+        $method->setAccessible(true);
+        $method->invoke($this->instance, $service);
     }
 }

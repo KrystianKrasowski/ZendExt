@@ -4,33 +4,36 @@ namespace ZendExt\ServiceManager;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use ReflectionClass;
+use ReflectionMethod;
+use ReflectionProperty;
 use Zend\ServiceManager\InitializerInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-class ServiceManagerInjectionInitializer implements InitializerInterface
+class ServiceManagerInjectionInitializer extends AbstractInjectionInitializer
 {
-    public function initialize($instance, ServiceLocatorInterface $serviceLocator)
+    const SERVICES_ANNOTATION = 'ZendExt\ServiceManager\Annotation\ServiceManager';
+
+    protected function processPropertyInjection(ReflectionProperty $property)
     {
-        if (!is_object($instance)) {
+        $inject = $this->annotationReader->getPropertyAnnotation($property, self::SERVICES_ANNOTATION);
+
+        if ($inject === null) {
             return;
         }
 
-        $reflection = new ReflectionClass($instance);
-        $annotations = new AnnotationReader();
+        $property->setAccessible(true);
+        $property->setValue($this->instance, $this->serviceLocator);
+    }
 
-        if ($annotations->getClassAnnotation($reflection, 'ZendExt\ServiceManager\Annotation\Service') === null) {
+    protected function processMethodInjection(ReflectionMethod $method)
+    {
+        $inject = $this->annotationReader->getMethodAnnotation($method, self::SERVICES_ANNOTATION);
+
+        if ($inject === null) {
             return;
         }
 
-        foreach ($reflection->getProperties() as $property) {
-            $inject = $annotations->getPropertyAnnotation($property, 'ZendExt\ServiceManager\Annotation\ServiceManager');
-
-            if ($inject === null) {
-                continue;
-            }
-
-            $property->setAccessible(true);
-            $property->setValue($instance, $serviceLocator);
-        }
+        $method->setAccessible(true);
+        $method->invoke($this->instance, $this->serviceLocator);
     }
 }

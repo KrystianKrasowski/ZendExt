@@ -2,42 +2,50 @@
 
 namespace ZendExt\ServiceManager;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use ReflectionClass;
-use Zend\ServiceManager\InitializerInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use ReflectionMethod;
+use ReflectionProperty;
 
-class ConfigInjectionInitializer implements InitializerInterface
+class ConfigInjectionInitializer extends AbstractInjectionInitializer
 {
-    public function initialize($instance, ServiceLocatorInterface $serviceLocator)
+    const CONFIG_ANNOTATION = 'ZendExt\ServiceManager\Annotation\Config';
+
+    protected function processPropertyInjection(ReflectionProperty $property)
     {
-        if (!is_object($instance)) {
+        $inject = $this->annotationReader->getPropertyAnnotation($property, self::CONFIG_ANNOTATION);
+
+        if ($inject === null) {
             return;
         }
 
-        $reflection = new ReflectionClass($instance);
-        $annotations = new AnnotationReader();
+        $configValue = $this->getConfigValue($inject);
 
-        if ($annotations->getClassAnnotation($reflection, 'ZendExt\ServiceManager\Annotation\Service') === null) {
+        $property->setAccessible(true);
+        $property->setValue($this->instance, $configValue);
+    }
+
+    private function getConfigValue($inject)
+    {
+        $configContainer = $this->serviceLocator->get('Config');
+        $nestedKeys = explode('.', $inject->key);
+
+        foreach ($nestedKeys as $key) {
+            $configContainer = $configContainer[$key];
+        }
+
+        return $configContainer;
+    }
+
+    protected function processMethodInjection(ReflectionMethod $method)
+    {
+        $inject = $this->annotationReader->getMethodAnnotation($method, self::CONFIG_ANNOTATION);
+
+        if ($inject === null) {
             return;
         }
 
-        foreach ($reflection->getProperties() as $property) {
-            $inject = $annotations->getPropertyAnnotation($property, 'ZendExt\ServiceManager\Annotation\Config');
+        $configValue = $this->getConfigValue($inject);
 
-            if ($inject === null) {
-                continue;
-            }
-
-            $configContainer = $serviceLocator->get('Config');
-            $nestedKeys = explode('.', $inject->key);
-
-            foreach ($nestedKeys as $key) {
-                $configContainer = $configContainer[$key];
-            }
-
-            $property->setAccessible(true);
-            $property->setValue($instance, $configContainer);
-        }
+        $method->setAccessible(true);
+        $method->invoke($this->instance, $configValue);
     }
 }
