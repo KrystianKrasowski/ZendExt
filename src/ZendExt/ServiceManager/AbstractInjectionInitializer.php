@@ -49,8 +49,11 @@ abstract class AbstractInjectionInitializer implements InitializerInterface
             return;
         }
 
-        array_walk($reflection->getProperties(), array($this, 'processPropertyInjection'));
-        array_walk($reflection->getMethods(), array($this, 'processMethodInjection'));
+        $reflectionProperties = $reflection->getProperties();
+        $reflectionMethods = $reflection->getMethods();
+
+        array_walk($reflectionProperties, array($this, 'processPropertyInjection'));
+        array_walk($reflectionMethods, array($this, 'processMethodInjection'));
     }
 
     abstract protected function processPropertyInjection(ReflectionProperty $property);
