@@ -13,7 +13,7 @@ class ServiceManagerInjectionInitializer extends AbstractInjectionInitializer
 {
     const SERVICES_ANNOTATION = 'ZendExt\ServiceManager\Annotation\ServiceManager';
 
-    protected function processPropertyInjection(ReflectionProperty $property)
+    protected function processPropertyInjection(ReflectionProperty $property, $instance, ServiceLocatorInterface $serviceLocator)
     {
         $inject = $this->annotationReader->getPropertyAnnotation($property, self::SERVICES_ANNOTATION);
 
@@ -22,10 +22,10 @@ class ServiceManagerInjectionInitializer extends AbstractInjectionInitializer
         }
 
         $property->setAccessible(true);
-        $property->setValue($this->instance, $this->serviceLocator);
+        $property->setValue($instance, $serviceLocator);
     }
 
-    protected function processMethodInjection(ReflectionMethod $method)
+    protected function processMethodInjection(ReflectionMethod $method, $instance, ServiceLocatorInterface $serviceLocator)
     {
         $inject = $this->annotationReader->getMethodAnnotation($method, self::SERVICES_ANNOTATION);
 
@@ -34,6 +34,6 @@ class ServiceManagerInjectionInitializer extends AbstractInjectionInitializer
         }
 
         $method->setAccessible(true);
-        $method->invoke($this->instance, $this->serviceLocator);
+        $method->invoke($instance, $serviceLocator);
     }
 }

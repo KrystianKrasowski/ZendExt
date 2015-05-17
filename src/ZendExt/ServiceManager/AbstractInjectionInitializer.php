@@ -37,9 +37,6 @@ abstract class AbstractInjectionInitializer implements InitializerInterface
             return;
         }
 
-        $this->serviceLocator = $serviceLocator;
-        $this->instance = $instance;
-
         $reflection = new ReflectionClass($instance);
 
         $classAnnotation = $this->annotationReader
@@ -52,11 +49,16 @@ abstract class AbstractInjectionInitializer implements InitializerInterface
         $reflectionProperties = $reflection->getProperties();
         $reflectionMethods = $reflection->getMethods();
 
-        array_walk($reflectionProperties, array($this, 'processPropertyInjection'));
-        array_walk($reflectionMethods, array($this, 'processMethodInjection'));
+        foreach ($reflectionProperties as $property) {
+            $this->processPropertyInjection($property, $instance, $serviceLocator);
+        }
+
+        foreach ($reflectionMethods as $method) {
+            $this->processMethodInjection($method, $instance, $serviceLocator);
+        }
     }
 
-    abstract protected function processPropertyInjection(ReflectionProperty $property);
+    abstract protected function processPropertyInjection(ReflectionProperty $property, $instance, ServiceLocatorInterface $serviceLocator);
 
-    abstract protected function processMethodInjection(ReflectionMethod $method);
+    abstract protected function processMethodInjection(ReflectionMethod $method, $instance, ServiceLocatorInterface $serviceLocator);
 }

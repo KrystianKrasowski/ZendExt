@@ -4,12 +4,13 @@ namespace ZendExt\ServiceManager;
 
 use ReflectionMethod;
 use ReflectionProperty;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 class ConfigInjectionInitializer extends AbstractInjectionInitializer
 {
     const CONFIG_ANNOTATION = 'ZendExt\ServiceManager\Annotation\Config';
 
-    protected function processPropertyInjection(ReflectionProperty $property)
+    protected function processPropertyInjection(ReflectionProperty $property, $instance, ServiceLocatorInterface $serviceLocator)
     {
         $inject = $this->annotationReader->getPropertyAnnotation($property, self::CONFIG_ANNOTATION);
 
@@ -17,15 +18,15 @@ class ConfigInjectionInitializer extends AbstractInjectionInitializer
             return;
         }
 
-        $configValue = $this->getConfigValue($inject);
+        $configValue = $this->getConfigValue($inject, $serviceLocator);
 
         $property->setAccessible(true);
-        $property->setValue($this->instance, $configValue);
+        $property->setValue($instance, $configValue);
     }
 
-    private function getConfigValue($inject)
+    private function getConfigValue($inject, ServiceLocatorInterface $serviceLocator)
     {
-        $configContainer = $this->serviceLocator->get('Config');
+        $configContainer = $serviceLocator->get('Config');
         $nestedKeys = explode('.', $inject->key);
 
         foreach ($nestedKeys as $key) {
@@ -35,7 +36,7 @@ class ConfigInjectionInitializer extends AbstractInjectionInitializer
         return $configContainer;
     }
 
-    protected function processMethodInjection(ReflectionMethod $method)
+    protected function processMethodInjection(ReflectionMethod $method, $instance, ServiceLocatorInterface $serviceLocator)
     {
         $inject = $this->annotationReader->getMethodAnnotation($method, self::CONFIG_ANNOTATION);
 
@@ -43,9 +44,9 @@ class ConfigInjectionInitializer extends AbstractInjectionInitializer
             return;
         }
 
-        $configValue = $this->getConfigValue($inject);
+        $configValue = $this->getConfigValue($inject, $serviceLocator);
 
         $method->setAccessible(true);
-        $method->invoke($this->instance, $configValue);
+        $method->invoke($instance, $configValue);
     }
 }
