@@ -3,6 +3,7 @@
 namespace ZendExt\ServiceManager;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\AnnotationRegistry;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -29,6 +30,7 @@ abstract class AbstractInjectionInitializer implements InitializerInterface
     public function __construct()
     {
         $this->annotationReader = new AnnotationReader();
+        AnnotationRegistry::registerLoader('class_exists');
     }
 
     public function initialize($instance, ServiceLocatorInterface $serviceLocator)
