@@ -31,6 +31,7 @@ abstract class AbstractInjectionInitializer implements InitializerInterface
     {
         $this->annotationReader = new AnnotationReader();
         AnnotationRegistry::registerLoader('class_exists');
+        AnnotationReader::addGlobalIgnoredName('triggers');
     }
 
     public function initialize($instance, ServiceLocatorInterface $serviceLocator)
