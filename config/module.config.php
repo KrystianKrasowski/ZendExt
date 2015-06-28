@@ -7,6 +7,7 @@ return [
             'ZendExt\FlashMessenger' => 'ZendExt\Plugin\FlashMessenger',
             'ZendExt\Redirector' => 'ZendExt\Plugin\Redirector',
             'ZendExt\FormMessenger' => 'ZendExt\Plugin\FormMessenger',
+            'ZendExt\RouteMatch' => 'ZendExt\Plugin\RouteMatch',
         ],
         'initializers' => [
             'ZendExt\ServiceManager\ServiceInjectionInitializer',
